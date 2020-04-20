@@ -32,20 +32,13 @@ def acc(y_preds, y):
 
 
 def load_data():
-    data_path = '/home/zhao/Desktop/datasets/'
-    with np.load(data_path + 'vec.npz') as data_train:
-        x = data_train['x']
-        y = data_train['y']
-        x, y = np.array(x, dtype=np.int32), np.array(y, dtype=np.int32)
-        permutation = np.random.permutation(x.shape[0])
-        x = x[permutation, :, :]
-        y= y[permutation, :]
+    data_path = './datasets/'
+    with np.load(data_path + 'vec.npz') as data:
+        x_train = data['x_train']
+        y_train = data['y_train']
+        x_test = data['x_test']
+        y_test = data['y_test']
 
-        train_size = int(x.shape[0] * 0.8)
-        x_train = x[:train_size, ::]
-        x_test = x[train_size:, ::]
-        y_train = y[:train_size, :]
-        y_test = y[train_size:, :]
         print('x_train shape:', x_train.shape, 'y_train shape:', y_train.shape)
         print('x_test shape:', x_test.shape, 'y_test shape:', y_test.shape)
     return (x_train, y_train), (x_test, y_test)
@@ -73,7 +66,7 @@ def model(input_shape):
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
 
     # Step 2: First GRU Layer (≈4 lines)
-    X = Bidirectional(GRU(units=256, return_sequences=True))(X)  # GRU (use 128 units and return the sequences)
+    X = GRU(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
 

@@ -1,11 +1,11 @@
 import numpy as np
 from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Dropout, Input, TimeDistributed, LSTM, Conv1D, Bidirectional
+from keras.layers import Dense, Activation, Dropout, Input, TimeDistributed, LSTM, Conv1D, Bidirectional, concatenate
 from keras.layers import GRU, BatchNormalization
 from keras.utils.vis_utils import plot_model
 from keras.optimizers import Adam
 import tensorflow as tf
-
+from matplotlib import pyplot
 
 #
 # =====================================================================
@@ -26,33 +26,24 @@ def props_to_onehot(props):
 
 
 # accuracy of softmax predicts
-def acc(y_preds, y):
-    correct_prediction = np.equal(np.argmax(y_preds, 1), np.argmax(y, 1))
+def acc(y_true, y_pred):
+    correct_prediction = np.equal(np.argmax(y_pred, 1), np.argmax(y_true, 1))
     return np.mean(correct_prediction.astype(int))
 
 
 def load_data():
     data_path = './datasets/'
-    with np.load(data_path + 'vec.npz') as data_train:
-        x = data_train['x']
-        y = data_train['y']
-        features = data_train['features']
-        x, y, features = np.array(x, dtype=np.int32), np.array(y, dtype=np.int32), np.array(features, dtype=np.int32)
-        permutation = np.random.permutation(x.shape[0])
-        x = x[permutation, :, :]
-        y = y[permutation, :]
-        features = features[permutation, :]
+    with np.load(data_path + 'vec.npz') as data:
+        x_train = data['x_train']
+        y_train = data['y_train']
+        features_train = data['features_train']
+        x_test = data['x_test']
+        y_test = data['y_test']
+        features_test = data['features_test']
 
-        train_size = int(x.shape[0] * 0.8)
-        x_train = x[:train_size, ::]
-        x_test = x[train_size:, ::]
-        y_train = y[:train_size, :]
-        y_test = y[train_size:, :]
-        features_train = features[:train_size, :]
-        features_test = features[train_size:, :]
         print('x_train shape:', x_train.shape, 'y_train shape:', y_train.shape)
         print('x_test shape:', x_test.shape, 'y_test shape:', y_test.shape)
-    return (x_train, y_train), (x_test, y_test), (features_train, features_test)
+    return (x_train, y_train), (features_train, features_test), (x_test, y_test)
 
 
 def model(input_shape, concat_shape, output_len):
@@ -66,18 +57,18 @@ def model(input_shape, concat_shape, output_len):
     model -- Keras model instance
     """
 
-    X_input = Input(shape=input_shape)
-    X1_input = Input(shape=concat_shape)
+    main_input = Input(shape=input_shape, name='main_input')
+    aux_input = Input(shape=concat_shape, name='aux_input')
     ### START CODE HERE ###
 
     # Step 1: CONV layer (≈4 lines)
-    X = Conv1D(256, 16, strides=8)(X_input)  # CONV1D
+    X = Conv1D(256, 16, strides=8)(main_input)  # CONV1D
     X = BatchNormalization()(X)  # Batch normalization
     X = Activation('relu')(X)  # ReLu activation
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
 
     # Step 2: First GRU Layer (≈4 lines)
-    X = Bidirectional(GRU(units=256, return_sequences=True))(X)  # GRU (use 128 units and return the sequences)
+    X = GRU(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
 
@@ -86,19 +77,25 @@ def model(input_shape, concat_shape, output_len):
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
     # X = Dropout(0.5)(X)  # dropout (use 0.8)
-    X = Dense(10, activation='relu')(X)
-    X = tf.concat([X, X1_input], 1)
-    # Step 4: Time-distributed dense layer (≈1 line)
-    X = Dense(output_len, activation="softmax")(X)  # time distributed  (sigmoid)
+    X = Dense(16, activation='relu')(X)
 
-    ### END CODE HERE ###
-    # TODO what's wrong here, inputs can't be two vector?
-    model = Model(inputs=(X_input, X1_input), outputs=X)
+    # nn layer
+    X1 = Dense(16, activation='relu')(aux_input)
+    X1 = Dense(16, activation='relu')(X1)
+
+    # merge layer
+    X = concatenate([X, X1])
+
+    # output layer
+    X = Dense(output_len, activation="softmax")(X)
+
+
+    model = Model(inputs=[main_input, aux_input], outputs=X)
 
     return model
 
 
-(x_train, y_train), (x_test, y_test), (features_train, features_test) = load_data()
+(x_train, y_train), (features_train, features_test), (x_test, y_test) = load_data()
 _, Tx, n_freq = x_train.shape
 _, y_len = y_train.shape
 
@@ -107,26 +104,34 @@ _, y_len = y_train.shape
 print('Build model...')
 model = model((Tx, n_freq), (2,), y_len)
 
-model.summary()
+# model.summary()
 opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.01)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=["accuracy"])
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])  # what is this accuracy?
 
-# plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+plot_model(model, to_file='rnn_nn_model.png', show_shapes=True, show_layer_names=True)
 
-model.fit((x_train, features_train), y_train,
-          epochs=100,
+history = model.fit([x_train, features_train], y_train,
+          epochs=200,
           batch_size=64,
-          validation_data=(x_test, y_test))
+          validation_data=([x_test, features_test], y_test))
 
 
-print('train set accuracy:', acc(model.predict(x_train), y_train))
-print('test set accuracy:', acc(model.predict(x_test), y_test))
+print('train set accuracy:', acc(y_train, model.predict([x_train, features_train])))
+print('test set accuracy:', acc(y_test, model.predict([x_test, features_test])))
 
 emotion_dict = {'excited': 0, 'angry': 1, 'sad': 2, 'relaxed': 3}
 predict_t = np.zeros((4, 4))
 y_test = np.argmax(y_test, axis=1)
-y_peds = np.argmax(model.predict(x_test), axis=1)
+y_peds = np.argmax(model.predict([x_test, features_test]), axis=1)
 for pre, real in zip(y_peds, y_test):
     predict_t[pre, real] += 1
 print(emotion_dict.keys())
 print(predict_t)
+
+pyplot.plot(history.history['loss'])
+pyplot.plot(history.history['val_loss'])
+pyplot.title('model train vs validation loss')
+pyplot.ylabel('loss')
+pyplot.xlabel('epoch')
+pyplot.legend(['train', 'validation'], loc='upper right')
+pyplot.show()

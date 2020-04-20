@@ -243,12 +243,26 @@ def prepare_dara():
         y = np.array(y)
         features = np.array(features)
         y = to_categorical(y)
-        print('shape y:', y.shape)
-        print('shape x:', x.shape)
-        print('shape features:', features.shape)
+
+        permutation = np.random.permutation(x.shape[0])
+        x = x[permutation, :, :]
+        y = y[permutation, :]
+        features = features[permutation, :]
+
+        train_size = int(x.shape[0] * 0.8)
+        x_train = x[:train_size, ::]
+        x_test = x[train_size:, ::]
+        y_train = y[:train_size, :]
+        y_test = y[train_size:, :]
+        features_train = features[:train_size, :]
+        features_test = features[train_size:, :]
+
+        print('x_train shape:', x_train.shape, 'y_train shape:', y_train.shape)
+        print('x_test shape:', x_test.shape, 'y_test shape:', y_test.shape)
         # np.set_printoptions(threshold=np.inf)
         # print(x)
-        np.savez(midi_path + 'vec.npz', x=x, y=y, features=features)
+        np.savez(midi_path + 'vec.npz', x_train=x_train, y_train=y_train, features_train=features_train,
+                 x_test=x_test, y_test=y_test, features_test=features_test)
 
 
 emotion_dict = {'excited': 0, 'angry': 1, 'sad': 2, 'relaxed': 3}

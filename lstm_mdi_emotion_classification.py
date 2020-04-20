@@ -22,7 +22,7 @@ def acc(y_preds, y):
     return np.mean(correct_prediction.astype(int))
 
 def load_data():
-    data_path = '/home/zhao/Desktop/datasets/'
+    data_path = './datasets/'
     with np.load(data_path + 'vec.npz') as data_train:
         x = data_train['x']
         y = data_train['y']
