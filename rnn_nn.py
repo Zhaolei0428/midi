@@ -77,16 +77,21 @@ def model(input_shape, concat_shape, output_len):
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
     # X = Dropout(0.5)(X)  # dropout (use 0.8)
-    X = Dense(16, activation='relu')(X)
+    X = Dense(128, activation='relu')(X)
+    # X = Dense(32, activation='relu')(X)
 
     # nn layer
-    X1 = Dense(16, activation='relu')(aux_input)
-    X1 = Dense(16, activation='relu')(X1)
+    X1 = Dense(128, activation='relu')(aux_input)
+    X1 = Dense(128, activation='relu')(X1)
 
     # merge layer
     X = concatenate([X, X1])
 
     # output layer
+    X = Dense(128, activation='sigmoid')(X)
+    # X = Dropout(0.3)(X)
+    X = Dense(64, activation='sigmoid')(X)
+    # X = Dropout(0.3)(X)
     X = Dense(output_len, activation="softmax")(X)
 
 
@@ -99,19 +104,19 @@ def model(input_shape, concat_shape, output_len):
 _, Tx, n_freq = x_train.shape
 _, y_len = y_train.shape
 
-
+feature_num = 4
 # build the model: a single LSTM
 print('Build model...')
-model = model((Tx, n_freq), (2,), y_len)
+model = model((Tx, n_freq), (feature_num,), y_len)
 
 # model.summary()
-opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.01)
+opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.05)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])  # what is this accuracy?
 
 plot_model(model, to_file='rnn_nn_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit([x_train, features_train], y_train,
-          epochs=200,
+          epochs=80,
           batch_size=64,
           validation_data=([x_test, features_test], y_test))
 

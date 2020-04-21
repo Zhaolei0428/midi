@@ -50,7 +50,7 @@ def parse_sys_event(event_type):
 
 # /home/zhao/Desktop/datasets/excited/Darktown.mid
 # /home/zhao/Downloads/watrmark.mid
-with open('/home/zhao/Desktop/datasets/train/excited/Hawaiian.mid', 'rb') as f:
+with open('./datasets/excited/0020.MID', 'rb') as f:
     print(f.read(200))
     f.seek(0)
     # HEADER

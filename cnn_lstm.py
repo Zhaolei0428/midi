@@ -5,7 +5,7 @@ from keras.layers import GRU, BatchNormalization
 from keras.utils.vis_utils import plot_model
 from keras.optimizers import Adam
 import tensorflow as tf
-
+from matplotlib import pyplot
 
 #
 # =====================================================================
@@ -96,13 +96,13 @@ print('Build model...')
 model = model((Tx, n_freq))
 
 model.summary()
-opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.01)
+opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.05)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=["accuracy"])
 
-# plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+plot_model(model, to_file='cnn_lstm_model.png', show_shapes=True, show_layer_names=True)
 
-model.fit(x_train, y_train,
-          epochs=100,
+history = model.fit(x_train, y_train,
+          epochs=150,
           batch_size=64,
           validation_data=(x_test, y_test))
 
@@ -118,3 +118,11 @@ for pre, real in zip(y_peds, y_test):
     predict_t[pre, real] += 1
 print(emotion_dict.keys())
 print(predict_t)
+
+pyplot.plot(history.history['loss'])
+pyplot.plot(history.history['val_loss'])
+pyplot.title('model train vs validation loss')
+pyplot.ylabel('loss')
+pyplot.xlabel('epoch')
+pyplot.legend(['train', 'validation'], loc='upper right')
+pyplot.show()
