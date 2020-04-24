@@ -102,7 +102,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=["accuracy
 plot_model(model, to_file='cnn_lstm_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit(x_train, y_train,
-          epochs=150,
+          epochs=100,
           batch_size=64,
           validation_data=(x_test, y_test))
 

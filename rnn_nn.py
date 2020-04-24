@@ -68,12 +68,12 @@ def model(input_shape, concat_shape, output_len):
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
 
     # Step 2: First GRU Layer (≈4 lines)
-    X = GRU(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
+    X = LSTM(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
 
     # Step 3: Second GRU Layer (≈4 lines)
-    X = GRU(units=256)(X)  # GRU (use 128 units and return the sequences)
+    X = LSTM(units=256)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
     # X = Dropout(0.5)(X)  # dropout (use 0.8)
@@ -102,9 +102,9 @@ def model(input_shape, concat_shape, output_len):
 
 (x_train, y_train), (features_train, features_test), (x_test, y_test) = load_data()
 _, Tx, n_freq = x_train.shape
-_, y_len = y_train.shape
+y_len = y_train.shape[1]
+feature_num = features_train.shape[1]
 
-feature_num = 4
 # build the model: a single LSTM
 print('Build model...')
 model = model((Tx, n_freq), (feature_num,), y_len)
@@ -116,7 +116,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy
 plot_model(model, to_file='rnn_nn_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit([x_train, features_train], y_train,
-          epochs=80,
+          epochs=200,
           batch_size=64,
           validation_data=([x_test, features_test], y_test))
 
