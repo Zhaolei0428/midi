@@ -192,28 +192,39 @@ def midi2vec(path):
             print(path, 'is not valid')
             return None
 
+        # [speed, average note number, average intensity, average notes' beat_num]
+        feature = np.zeros(feature_num, np.int32)
+        feature[0] = speed
+        note_num, intensity, beat_val, time_note_num = 0, 0, 0, 0
+
+        # filter tempo notes
         total_note_list.sort(key=take_second)  # sort by start time
         for note in total_note_list:
-            note[2] = int((note[2]-note[1])/note_64_ticks+1)  # time of note
-            note[1] = int(note[1] / note_64_ticks)  # count by 64 division note
+            note_num += 1
+            intensity += note[4]
+            time_value = int(note[2] - note[1])
+            if time_value > note_64_ticks/4:
+                note[2] = int(time_value/note_64_ticks+1)  # beat num of note
+                note[1] = int(note[1] / note_64_ticks)  # count by 64 division note
+                beat_val += note[2]
+                time_note_num += 1
+                filter_note_list.append(note)
+        feature[1] = note_num*4/(total_note_list[-1][1]/header_info[2])
+        feature[2] = intensity/note_num
+        feature[3] = beat_val/time_note_num
+        total_note_list = filter_note_list
 
         vec_list = []
-        feature_list = []
         # print(note_list)
         for sample_time in sample_steps:
             vec = np.zeros((max_vec_num, max_freq_num), dtype=np.int32)
-            feature = np.zeros(feature_num, np.int32)
             note_list = []
             for note in total_note_list:
                 if sample_time <= note[1] <= sample_time + max_vec_num:
                     note_list.append(note)
-                    feature[0] += 1
-                    feature[1] += note[4]
+
             if len(note_list) == 0:
                 break
-            feature[1] = feature[1]/feature[0]
-            feature[2] = speed
-            # feature[3] = 0
 
             freq_dict = {}
             index = 0
@@ -242,9 +253,7 @@ def midi2vec(path):
                 for key in to_remove:
                     freq_dict.pop(key)
             vec_list.append(vec)
-            # feature[3] = feature[3]/feature[0]
-            feature_list.append(feature)
-        return vec_list, feature_list
+        return vec_list, feature
 
 
 def prepare_dara():
@@ -260,9 +269,9 @@ def prepare_dara():
             print(files)
             for file in files:
                 path = midi_path + emotion_name + '/' + file
-                vec_list, feature_list = midi2vec(path)
+                vec_list, feature = midi2vec(path)
                 if vec_list is not None:
-                    for vec, feature in zip(vec_list, feature_list):
+                    for vec in vec_list:
                         select = random.randint(0, 9)
                         if select < 2:
                             x_test.append(vec)
@@ -291,11 +300,11 @@ def prepare_dara():
 
 
 emotion_dict = {'excited': 0, 'angry': 1, 'sad': 2, 'relaxed': 3}
-feature_num = 3  # feature number like tempo, intensity
-max_vec_num = 960  # time steps of sample(count by quarter notes)
-max_freq_num = 8  # max number of frequencies at one time
-sample_nums = 5  # max segment of one midi file
-sample_steps = [960 * i for i in range(sample_nums)]
+feature_num = 4  # feature number like tempo, intensity
+max_vec_num = 320  # time steps of sample(count by quarter notes)
+max_freq_num = 6  # max number of frequencies at one time
+sample_nums = 25  # max segment of one midi file
+sample_steps = [max_vec_num * i for i in range(sample_nums)]
 
 midi_path = './datasets/'
 prepare_dara()

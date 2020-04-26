@@ -65,7 +65,7 @@ def model(input_shape, concat_shape, output_len):
     X = Conv1D(256, 16, strides=8)(main_input)  # CONV1D
     X = BatchNormalization()(X)  # Batch normalization
     X = Activation('relu')(X)  # ReLu activation
-    # X = Dropout(0.4)(X)  # dropout (use 0.8)
+    # X = Dropout(0.3)(X)  # dropout (use 0.8)
 
     # Step 2: First GRU Layer (≈4 lines)
     X = LSTM(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
@@ -76,7 +76,7 @@ def model(input_shape, concat_shape, output_len):
     X = LSTM(units=256)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
-    # X = Dropout(0.5)(X)  # dropout (use 0.8)
+    # X = Dropout(0.3)(X)  # dropout (use 0.8)
     X = Dense(128, activation='relu')(X)
     # X = Dense(32, activation='relu')(X)
 
@@ -90,6 +90,7 @@ def model(input_shape, concat_shape, output_len):
     # output layer
     X = Dense(128, activation='sigmoid')(X)
     # X = Dropout(0.3)(X)
+    X = Dense(64, activation='sigmoid')(X)
     X = Dense(64, activation='sigmoid')(X)
     # X = Dropout(0.3)(X)
     X = Dense(output_len, activation="softmax")(X)
@@ -110,13 +111,13 @@ print('Build model...')
 model = model((Tx, n_freq), (feature_num,), y_len)
 
 # model.summary()
-opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.05)
+opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.02)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])  # what is this accuracy?
 
 plot_model(model, to_file='rnn_nn_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit([x_train, features_train], y_train,
-          epochs=200,
+          epochs=500,
           batch_size=64,
           validation_data=([x_test, features_test], y_test))
 

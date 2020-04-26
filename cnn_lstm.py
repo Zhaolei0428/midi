@@ -76,6 +76,9 @@ def model(input_shape):
     X = BatchNormalization()(X)  # Batch normalization
     # X = Dropout(0.5)(X)  # dropout (use 0.8)
 
+    X = Dense(128, activation="sigmoid")(X)
+    X = Dense(64, activation="sigmoid")(X)
+
     # Step 4: Time-distributed dense layer (≈1 line)
     X = Dense(y_len, activation="softmax")(X)  # time distributed  (sigmoid)
 
@@ -102,7 +105,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=["accuracy
 plot_model(model, to_file='cnn_lstm_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit(x_train, y_train,
-          epochs=100,
+          epochs=300,
           batch_size=64,
           validation_data=(x_test, y_test))
 
