@@ -1,0 +1,15 @@
+train set accuracy: 0.9592668024439919
+validation set accuracy: 0.7859649122807018
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[69. 14.  0.  0.]
+ [ 9. 46.  9.  0.]
+ [ 0.  6. 62.  9.]
+ [ 2.  5.  7. 47.]]
+test set accuracy: 0.43724696356275305
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[ 2.  7.  0. 13.]
+ [11. 51. 24.  7.]
+ [13.  8. 33. 13.]
+ [11.  8. 24. 22.]]
+
+Process finished with exit code 0

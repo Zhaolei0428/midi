@@ -44,6 +44,14 @@ def load_data():
     return (x_train, y_train), (x_test, y_test)
 
 
+def load_testdata():
+    data_path = './datasets/test/'
+    with np.load(data_path + 'vec.npz') as data:
+        x = data['x']
+        y = data['y']
+    return x, y
+
+
 def model(input_shape):
     """
     Function creating the model's graph in Keras.
@@ -66,12 +74,12 @@ def model(input_shape):
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
 
     # Step 2: First GRU Layer (≈4 lines)
-    X = GRU(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
+    X = LSTM(units=256, return_sequences=True)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
 
     # Step 3: Second GRU Layer (≈4 lines)
-    X = GRU(units=256)(X)  # GRU (use 128 units and return the sequences)
+    X = LSTM(units=256)(X)  # GRU (use 128 units and return the sequences)
     # X = Dropout(0.4)(X)  # dropout (use 0.8)
     X = BatchNormalization()(X)  # Batch normalization
     # X = Dropout(0.5)(X)  # dropout (use 0.8)
@@ -99,13 +107,13 @@ print('Build model...')
 model = model((Tx, n_freq))
 
 model.summary()
-opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.05)
+opt = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.02)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=["accuracy"])
 
 plot_model(model, to_file='cnn_lstm_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit(x_train, y_train,
-          epochs=300,
+          epochs=200,
           batch_size=64,
           validation_data=(x_test, y_test))
 
@@ -117,6 +125,17 @@ emotion_dict = {'excited': 0, 'angry': 1, 'sad': 2, 'relaxed': 3}
 predict_t = np.zeros((4, 4))
 y_test = np.argmax(y_test, axis=1)
 y_peds = np.argmax(model.predict(x_test), axis=1)
+for pre, real in zip(y_peds, y_test):
+    predict_t[pre, real] += 1
+print(emotion_dict.keys())
+print(predict_t)
+
+# test set
+x, y = load_testdata()
+print('test set accuracy:', acc(y, model.predict(x)))
+predict_t = np.zeros((4, 4))
+y_test = np.argmax(y, axis=1)
+y_peds = np.argmax(model.predict(x), axis=1)
 for pre, real in zip(y_peds, y_test):
     predict_t[pre, real] += 1
 print(emotion_dict.keys())

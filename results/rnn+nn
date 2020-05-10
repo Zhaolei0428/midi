@@ -1,0 +1,30 @@
+==>500 epochs
+train set accuracy: 0.9902248289345064
+test set accuracy: 0.8975409836065574
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[61.  5.  1.  0.]
+ [ 4. 68.  1.  1.]
+ [ 2.  3. 54.  3.]
+ [ 0.  2.  3. 36.]]
+test set accuracy: 0.46558704453441296
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[ 3. 14.  4. 25.]
+ [ 9. 54. 13.  3.]
+ [25.  6. 41. 10.]
+ [ 0.  0. 23. 17.]]
+
+
+==>50 epochs
+train set accuracy: 0.9530791788856305
+test set accuracy: 0.8237704918032787
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[56.  4.  2.  3.]
+ [ 8. 61.  3.  2.]
+ [ 2. 12. 50.  1.]
+ [ 1.  1.  4. 34.]]
+test set accuracy: 0.5344129554655871
+dict_keys(['excited', 'angry', 'sad', 'relaxed'])
+[[ 7.  3.  0. 27.]
+ [13. 63. 11.  2.]
+ [17.  8. 55. 19.]
+ [ 0.  0. 15.  7.]]

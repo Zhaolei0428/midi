@@ -46,6 +46,14 @@ def load_data():
     return (x_train, y_train), (features_train, features_test), (x_test, y_test)
 
 
+def load_testdata():
+    data_path = './datasets/test/'
+    with np.load(data_path + 'vec.npz') as data:
+        x = data['x']
+        y = data['y']
+        features = data['features']
+    return x, y, features
+
 def model(input_shape, concat_shape, output_len):
     """
     Function creating the model's graph in Keras.
@@ -90,7 +98,7 @@ def model(input_shape, concat_shape, output_len):
     # output layer
     X = Dense(128, activation='sigmoid')(X)
     # X = Dropout(0.3)(X)
-    X = Dense(64, activation='sigmoid')(X)
+    # X = Dense(64, activation='sigmoid')(X)
     X = Dense(64, activation='sigmoid')(X)
     # X = Dropout(0.3)(X)
     X = Dense(output_len, activation="softmax")(X)
@@ -117,7 +125,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy
 plot_model(model, to_file='rnn_nn_model.png', show_shapes=True, show_layer_names=True)
 
 history = model.fit([x_train, features_train], y_train,
-          epochs=500,
+          epochs=50,
           batch_size=64,
           validation_data=([x_test, features_test], y_test))
 
@@ -141,3 +149,14 @@ pyplot.ylabel('loss')
 pyplot.xlabel('epoch')
 pyplot.legend(['train', 'validation'], loc='upper right')
 pyplot.show()
+
+
+x, y, features = load_testdata()
+print('test set accuracy:', acc(y, model.predict([x, features])))
+predict_t = np.zeros((4, 4))
+y_test = np.argmax(y, axis=1)
+y_peds = np.argmax(model.predict([x, features]), axis=1)
+for pre, real in zip(y_peds, y_test):
+    predict_t[pre, real] += 1
+print(emotion_dict.keys())
+print(predict_t)
